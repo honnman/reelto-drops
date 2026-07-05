@@ -16,30 +16,25 @@ export async function sendOtpAction(
   const digits = phone.replace(/\D/g, '')
   const normalized = digits.length === 10 ? '91' + digits : digits
 
-  const { data: sellerData } = await supabaseAdmin
-    .from('drop_seller_profiles')
-    .select('id')
-    .eq('phone', normalized)
-    .maybeSingle()
+  const { data: sellers, error } = await supabaseAdmin.rpc('get_seller_by_phone', { p_phone: normalized })
 
-  if (!sellerData) {
+  if (error || !sellers || sellers.length === 0) {
     return { success: false, error: 'No seller account found for this number. Contact Reelto to get listed.' }
   }
 
+  const seller = sellers[0]
   const otp = String(Math.floor(100000 + Math.random() * 900000))
   const otpHash = await hashOtp(otp)
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
-  await supabaseAdmin.from('drop_seller_sessions').insert({
-    drop_seller_id: sellerData.id,
-    otp_hash: otpHash,
-    otp_expires_at: expiresAt,
-    is_otp_used: false,
+  await supabaseAdmin.rpc('insert_otp_session', {
+    p_seller_id: seller.id,
+    p_otp_hash: otpHash,
+    p_expires_at: expiresAt,
   })
 
   console.log(`[DEV] OTP for ${normalized}: ${otp}`)
 
-  // Return OTP to display on screen (dev only — remove when Interakt is wired)
   return { success: true, devOtp: otp }
 }
 
@@ -50,42 +45,30 @@ export async function verifyOtpAction(
   const digits = phone.replace(/\D/g, '')
   const normalized = digits.length === 10 ? '91' + digits : digits
 
-  const { data: seller } = await supabaseAdmin
-    .from('drop_seller_profiles')
-    .select('id')
-    .eq('phone', normalized)
-    .single()
+  const { data: sellers } = await supabaseAdmin.rpc('get_seller_by_phone', { p_phone: normalized })
+  if (!sellers || sellers.length === 0) return { success: false, error: 'Session expired. Please try again.' }
 
-  if (!seller) return { success: false, error: 'Session expired. Please try again.' }
-
+  const seller = sellers[0]
   const otpHash = await hashOtp(otp)
 
-  const { data: session } = await supabaseAdmin
-    .from('drop_seller_sessions')
-    .select('id')
-    .eq('drop_seller_id', seller.id)
-    .eq('otp_hash', otpHash)
-    .eq('is_otp_used', false)
-    .gt('otp_expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const { data: sessions } = await supabaseAdmin.rpc('verify_otp_session', {
+    p_seller_id: seller.id,
+    p_otp_hash: otpHash,
+  })
 
-  if (!session) return { success: false, error: 'Invalid or expired OTP. Please try again.' }
+  if (!sessions || sessions.length === 0) {
+    return { success: false, error: 'Invalid or expired OTP. Please try again.' }
+  }
 
-  await supabaseAdmin
-    .from('drop_seller_sessions')
-    .update({ is_otp_used: true })
-    .eq('id', session.id)
+  await supabaseAdmin.rpc('mark_otp_used', { p_session_id: sessions[0].id })
 
   const token = crypto.randomUUID()
   const tokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  await supabaseAdmin.from('drop_seller_sessions').insert({
-    drop_seller_id: seller.id,
-    token,
-    token_expires_at: tokenExpiry,
-    is_otp_used: true,
+  await supabaseAdmin.rpc('insert_auth_token', {
+    p_seller_id: seller.id,
+    p_token: token,
+    p_expires_at: tokenExpiry,
   })
 
   return { success: true, token }
