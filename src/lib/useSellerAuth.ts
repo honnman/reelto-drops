@@ -8,6 +8,7 @@ export function useSellerAuth() {
   const router = useRouter()
   const [seller, setSeller] = useState<DropSellerProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     async function check() {
@@ -16,8 +17,15 @@ export function useSellerAuth() {
 
       const { data, error } = await supabase.rpc('get_seller_by_token', { p_token: token })
 
-      if (error || !data || data.length === 0) {
-        router.replace('/seller/login')
+      if (error) {
+        setAuthError(`RPC error: ${error.message} (code: ${error.code})`)
+        setLoading(false)
+        return
+      }
+
+      if (!data || data.length === 0) {
+        setAuthError('Token valid but no seller found — redirecting...')
+        setTimeout(() => router.replace('/seller/login'), 2000)
         return
       }
 
@@ -27,5 +35,5 @@ export function useSellerAuth() {
     check()
   }, [router])
 
-  return { seller, loading }
+  return { seller, loading, authError }
 }

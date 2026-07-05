@@ -2,7 +2,8 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSellerAuth } from '@/lib/useSellerAuth'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
+import { createProductAction } from '@/app/seller/actions'
 import SellerNav from '@/components/seller/SellerNav'
 
 const GRAD = 'linear-gradient(135deg, #EA580C, #DB2877)'
@@ -27,8 +28,7 @@ export default function NewProductPage() {
     const picked = Array.from(e.target.files ?? []).slice(0, 8)
     const newFiles = [...files, ...picked].slice(0, 8)
     setFiles(newFiles)
-    const urls = newFiles.map((f) => URL.createObjectURL(f))
-    setPreviews(urls)
+    setPreviews(newFiles.map((f) => URL.createObjectURL(f)))
   }
 
   function removeFile(i: number) {
@@ -42,23 +42,18 @@ export default function NewProductPage() {
     setError('')
     setSaving(true)
 
-    // Upload photos
     const photoUrls: string[] = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       const path = `${seller.id}/${Date.now()}_${i}_${file.name.replace(/[^a-z0-9._]/gi, '_')}`
-      const { error: uploadErr } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .upload(path, file, { upsert: false })
-
+      const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: false })
       if (!uploadErr) {
-        const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path)
+        const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path)
         photoUrls.push(urlData.publicUrl)
       }
     }
 
-    // Insert product
-    const { error: insertErr } = await supabaseAdmin.from('drop_products').insert({
+    const result = await createProductAction({
       drop_seller_id: seller.id,
       source: seller.type,
       name: name.trim(),
@@ -67,11 +62,10 @@ export default function NewProductPage() {
       category: category.trim() || null,
       store_price: storePrice ? Math.round(parseFloat(storePrice)) : null,
       photos: photoUrls,
-      is_active: true,
     })
 
     setSaving(false)
-    if (insertErr) { setError(insertErr.message); return }
+    if (result.error) { setError(result.error); return }
     router.push('/seller/products')
   }
 
@@ -86,41 +80,16 @@ export default function NewProductPage() {
         </h1>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {/* Photos */}
           <div>
             <label style={labelStyle}>Photos (up to 8)</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
               {previews.map((url, i) => (
-                <div
-                  key={i}
-                  style={{
-                    position: 'relative',
-                    aspectRatio: '1',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    background: '#f5f0ea',
-                  }}
-                >
+                <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', background: '#f5f0ea' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <button
                     onClick={() => removeFile(i)}
-                    style={{
-                      position: 'absolute',
-                      top: '4px',
-                      right: '4px',
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      background: 'rgba(0,0,0,0.7)',
-                      color: '#ccc',
-                      border: 'none',
-                      fontSize: '10px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                    style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,0,0,0.7)', color: '#ccc', border: 'none', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     ✕
                   </button>
@@ -129,82 +98,34 @@ export default function NewProductPage() {
               {previews.length < 8 && (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  style={{
-                    aspectRatio: '1',
-                    borderRadius: '8px',
-                    border: '1px dashed #e8e0d8',
-                    background: 'transparent',
-                    color: '#b8a898',
-                    cursor: 'pointer',
-                    fontSize: '22px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                  style={{ aspectRatio: '1', borderRadius: '8px', border: '1px dashed #e8e0d8', background: 'transparent', color: '#b8a898', cursor: 'pointer', fontSize: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   +
                 </button>
               )}
             </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={onFilePick}
-            />
+            <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={onFilePick} />
           </div>
 
           <Field label="Product name *">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Banarasi Silk — Crimson Gold"
-              style={inputStyle}
-            />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Banarasi Silk — Crimson Gold" style={inputStyle} />
           </Field>
 
           <Field label="Description">
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              placeholder="Weave, occasion, blouse piece details..."
-              style={{ ...inputStyle, resize: 'vertical' }}
-            />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Weave, occasion, blouse piece details..." style={{ ...inputStyle, resize: 'vertical' }} />
           </Field>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Field label="Fabric">
-              <input
-                type="text"
-                value={fabric}
-                onChange={(e) => setFabric(e.target.value)}
-                placeholder="e.g. Pure Silk"
-                style={inputStyle}
-              />
+              <input type="text" value={fabric} onChange={(e) => setFabric(e.target.value)} placeholder="e.g. Pure Silk" style={inputStyle} />
             </Field>
             <Field label="Category">
-              <input
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="e.g. Bridal"
-                style={inputStyle}
-              />
+              <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Bridal" style={inputStyle} />
             </Field>
           </div>
 
           <Field label="Store price (₹)">
-            <input
-              type="number"
-              value={storePrice}
-              onChange={(e) => setStorePrice(e.target.value)}
-              placeholder="e.g. 4500"
-              style={inputStyle}
-            />
+            <input type="number" value={storePrice} onChange={(e) => setStorePrice(e.target.value)} placeholder="e.g. 4500" style={inputStyle} />
           </Field>
 
           {error && <p style={{ color: '#ef4444', fontSize: '13px' }}>{error}</p>}

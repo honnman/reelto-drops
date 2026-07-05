@@ -2,7 +2,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSellerAuth } from '@/lib/useSellerAuth'
-import { supabaseAdmin } from '@/lib/supabase'
+import {
+  getDropAction,
+  getDropItemsAction,
+  getSellerProductsAction,
+  updateDropStatusAction,
+  addItemToDropAction,
+  updateItemStatusAction,
+} from '@/app/seller/actions'
 import { DropEvent, DropEventItem, DropProduct } from '@/lib/types'
 import SellerNav from '@/components/seller/SellerNav'
 import { formatINR } from '@/lib/utils'
@@ -29,64 +36,33 @@ export default function ManageDropPage() {
   const [adding, setAdding] = useState(false)
 
   async function load() {
-    const { data: dropData } = await supabaseAdmin
-      .from('drop_events')
-      .select('*')
-      .eq('id', dropId)
-      .single()
-
+    const dropData = await getDropAction(dropId)
     if (!dropData) { router.replace('/seller/drops'); return }
-    setDrop(dropData as DropEvent)
+    setDrop(dropData)
 
-    const { data: itemsData } = await supabaseAdmin
-      .from('drop_event_items')
-      .select('*')
-      .eq('drop_event_id', dropId)
-      .order('sort_order')
-
-    const typedItems = (itemsData ?? []) as DropEventItem[]
-
-    if (typedItems.length > 0) {
-      const pids = typedItems.map((i) => i.drop_product_id)
-      const { data: prods } = await supabaseAdmin
-        .from('drop_products')
-        .select('*')
-        .in('id', pids)
-      const prodMap = new Map((prods ?? []).map((p: DropProduct) => [p.id, p]))
-      setItems(typedItems.map((i) => ({ ...i, product: prodMap.get(i.drop_product_id) })))
-    } else {
-      setItems([])
-    }
-
+    const [loadedItems, loadedProducts] = await Promise.all([
+      getDropItemsAction(dropId),
+      seller ? getSellerProductsAction(seller.id) : Promise.resolve([]),
+    ])
+    setItems(loadedItems)
+    setProducts(loadedProducts)
     setPageLoading(false)
   }
 
-  async function loadProducts() {
-    if (!seller) return
-    const { data } = await supabaseAdmin
-      .from('drop_products')
-      .select('*')
-      .eq('drop_seller_id', seller.id)
-      .eq('is_active', true)
-    setProducts((data as DropProduct[]) ?? [])
-  }
-
   useEffect(() => {
-    if (!authLoading && seller) { load(); loadProducts() }
+    if (!authLoading && seller) load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, seller])
 
-  /* ─── Status transitions ─── */
   async function updateDropStatus(newStatus: DropEvent['status']) {
     setError('')
+    await updateDropStatusAction(dropId, newStatus)
     const patch: Partial<DropEvent> = { status: newStatus }
     if (newStatus === 'live') patch.started_at = new Date().toISOString()
     if (newStatus === 'ended') patch.ended_at = new Date().toISOString()
-    await supabaseAdmin.from('drop_events').update(patch).eq('id', dropId)
     setDrop((d) => d ? { ...d, ...patch } : d)
   }
 
-  /* ─── Item actions ─── */
   async function revealItem(item: ItemWithProduct) {
     const liveItem = items.find((i) => i.status === 'live' && i.id !== item.id)
     if (liveItem) {
@@ -94,50 +70,35 @@ export default function ManageDropPage() {
       return
     }
     setActionError('')
-    await supabaseAdmin
-      .from('drop_event_items')
-      .update({ status: 'live', revealed_at: new Date().toISOString() })
-      .eq('id', item.id)
+    await updateItemStatusAction(item.id, 'live')
     setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, status: 'live', revealed_at: new Date().toISOString() } : i))
   }
 
   async function markSold(item: ItemWithProduct) {
+    await updateItemStatusAction(item.id, 'sold', { winning_bid_amount: item.starting_bid })
     const now = new Date().toISOString()
-    await supabaseAdmin
-      .from('drop_event_items')
-      .update({ status: 'sold', sold_at: now, winning_bid_amount: item.starting_bid })
-      .eq('id', item.id)
     setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, status: 'sold', sold_at: now, winning_bid_amount: item.starting_bid } : i))
   }
 
   async function markUnsold(item: ItemWithProduct) {
-    await supabaseAdmin
-      .from('drop_event_items')
-      .update({ status: 'unsold' })
-      .eq('id', item.id)
+    await updateItemStatusAction(item.id, 'unsold')
     setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, status: 'unsold' } : i))
   }
 
-  /* ─── Add item ─── */
   async function addItem() {
     if (!selectedProductId || !startingBid) return
     setAdding(true)
     const nextOrder = (items.at(-1)?.sort_order ?? 0) + 1
-    const { data: newItem } = await supabaseAdmin
-      .from('drop_event_items')
-      .insert({
-        drop_event_id: dropId,
-        drop_product_id: selectedProductId,
-        sort_order: nextOrder,
-        starting_bid: Math.round(parseFloat(startingBid)),
-        status: 'upcoming',
-      })
-      .select()
-      .single()
+    const result = await addItemToDropAction({
+      drop_event_id: dropId,
+      drop_product_id: selectedProductId,
+      sort_order: nextOrder,
+      starting_bid: Math.round(parseFloat(startingBid)),
+    })
 
-    if (newItem) {
+    if (result.item) {
       const product = products.find((p) => p.id === selectedProductId)
-      setItems((prev) => [...prev, { ...(newItem as DropEventItem), product }])
+      setItems((prev) => [...prev, { ...result.item!, product }])
     }
     setAdding(false)
     setShowAddModal(false)
@@ -153,16 +114,7 @@ export default function ManageDropPage() {
       <SellerNav />
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '28px 20px' }}>
 
-        {/* Section A: Drop details */}
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e8e0d8',
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}
-        >
+        <div style={{ background: '#fff', border: '1px solid #e8e0d8', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
             <div>
               <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '22px', color: '#1a1a1a', margin: '0 0 4px' }}>
@@ -175,7 +127,6 @@ export default function ManageDropPage() {
             <StatusBadge status={drop.status} />
           </div>
 
-          {/* Status controls */}
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {drop.status === 'draft' && (
               <ActionBtn label="Publish Drop" onClick={() => updateDropStatus('scheduled')} grad />
@@ -191,16 +142,7 @@ export default function ManageDropPage() {
                 href={`/${drop.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  border: '1px solid #e8e0d8',
-                  color: '#b8a898',
-                  borderRadius: '8px',
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }}
+                style={{ border: '1px solid #e8e0d8', color: '#b8a898', borderRadius: '8px', padding: '8px 16px', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
               >
                 View Public Page ↗
               </a>
@@ -209,7 +151,6 @@ export default function ManageDropPage() {
           {error && <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '10px' }}>{error}</p>}
         </div>
 
-        {/* Section B: Items */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <h2 style={{ color: '#b8a898', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
             Items ({items.length})
@@ -217,16 +158,7 @@ export default function ManageDropPage() {
           {drop.status !== 'ended' && (
             <button
               onClick={() => setShowAddModal(true)}
-              style={{
-                background: GRAD,
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '7px 14px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
+              style={{ background: GRAD, color: '#fff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
             >
               + Add Item
             </button>
@@ -259,7 +191,6 @@ export default function ManageDropPage() {
         )}
       </div>
 
-      {/* Add item modal */}
       {showAddModal && (
         <Modal onClose={() => setShowAddModal(false)} title="Add Item to Drop">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -316,15 +247,7 @@ export default function ManageDropPage() {
   )
 }
 
-/* ─── Sub-components ─── */
-
-function ItemRow({
-  item,
-  dropStatus,
-  onReveal,
-  onSold,
-  onUnsold,
-}: {
+function ItemRow({ item, dropStatus, onReveal, onSold, onUnsold }: {
   item: ItemWithProduct
   dropStatus: DropEvent['status']
   onReveal: () => void
@@ -333,7 +256,6 @@ function ItemRow({
 }) {
   const photo = item.product?.photos?.[0]
   const isLive = dropStatus === 'live'
-
   const statusColors: Record<string, { bg: string; color: string }> = {
     upcoming: { bg: '#f5f0ea', color: '#9a8f87' },
     live: { bg: 'rgba(219,40,119,0.1)', color: '#DB2877' },
@@ -343,28 +265,8 @@ function ItemRow({
   const sc = statusColors[item.status] ?? statusColors.upcoming
 
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: item.status === 'live' ? '1px solid #DB2877' : '1px solid #e8e0d8',
-        borderRadius: '12px',
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-      }}
-    >
-      {/* Thumbnail */}
-      <div
-        style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          background: '#f5f0ea',
-          flexShrink: 0,
-        }}
-      >
+    <div style={{ background: '#fff', border: item.status === 'live' ? '1px solid #DB2877' : '1px solid #e8e0d8', borderRadius: '12px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', background: '#f5f0ea', flexShrink: 0 }}>
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -372,21 +274,15 @@ function ItemRow({
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🪡</div>
         )}
       </div>
-
-      {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ color: '#1a1a1a', fontSize: '14px', fontWeight: 600, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {String(item.sort_order).padStart(2, '0')} · {item.product?.name ?? '—'}
         </p>
         <p style={{ color: '#9a8f87', fontSize: '12px', margin: 0 }}>{formatINR(item.starting_bid)}</p>
       </div>
-
-      {/* Status */}
       <span style={{ background: sc.bg, color: sc.color, fontSize: '11px', fontWeight: 700, borderRadius: '6px', padding: '3px 8px', flexShrink: 0, textTransform: 'capitalize' }}>
         {item.status}
       </span>
-
-      {/* Actions */}
       {isLive && item.status === 'upcoming' && (
         <button onClick={onReveal} style={smallBtn('#EA580C')}>Reveal</button>
       )}

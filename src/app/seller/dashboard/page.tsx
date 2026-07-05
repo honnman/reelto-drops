@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSellerAuth } from '@/lib/useSellerAuth'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSellerDropsRecentAction } from '@/app/seller/actions'
 import { DropEvent } from '@/lib/types'
 import SellerNav from '@/components/seller/SellerNav'
 import { formatINR } from '@/lib/utils'
@@ -10,25 +10,19 @@ import { formatINR } from '@/lib/utils'
 const GRAD = 'linear-gradient(135deg, #EA580C, #DB2877)'
 
 export default function SellerDashboardPage() {
-  const { seller, loading } = useSellerAuth()
+  const { seller, loading, authError } = useSellerAuth()
   const [drops, setDrops] = useState<DropEvent[]>([])
   const [dropsLoading, setDropsLoading] = useState(true)
 
   useEffect(() => {
     if (!seller) return
-    supabaseAdmin
-      .from('drop_events')
-      .select('*')
-      .eq('drop_seller_id', seller.id)
-      .order('scheduled_at', { ascending: false })
-      .limit(5)
-      .then(({ data }) => {
-        setDrops((data as DropEvent[]) ?? [])
-        setDropsLoading(false)
-      })
+    getSellerDropsRecentAction(seller.id).then((data) => {
+      setDrops(data)
+      setDropsLoading(false)
+    })
   }, [seller])
 
-  if (loading) return <LoadingScreen />
+  if (loading) return <LoadingScreen error={authError} />
 
   const totalDrops = drops.length
   const totalSold = drops.reduce((sum, d) => sum + (d.total_sold ?? 0), 0)
@@ -39,7 +33,6 @@ export default function SellerDashboardPage() {
       <SellerNav />
 
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '28px 20px' }}>
-        {/* Welcome */}
         <h1
           style={{
             fontFamily: 'var(--font-playfair), serif',
@@ -55,7 +48,6 @@ export default function SellerDashboardPage() {
           Here&apos;s your drop summary
         </p>
 
-        {/* Stats cards */}
         <div
           style={{
             display: 'grid',
@@ -78,14 +70,7 @@ export default function SellerDashboardPage() {
                 padding: '16px',
               }}
             >
-              <div
-                style={{
-                  fontSize: '22px',
-                  fontWeight: 700,
-                  color: stat.color,
-                  marginBottom: '4px',
-                }}
-              >
+              <div style={{ fontSize: '22px', fontWeight: 700, color: stat.color, marginBottom: '4px' }}>
                 {stat.value}
               </div>
               <div style={{ fontSize: '11px', color: '#b8a898', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -95,7 +80,6 @@ export default function SellerDashboardPage() {
           ))}
         </div>
 
-        {/* Quick action */}
         <Link href="/seller/drops/new" style={{ textDecoration: 'none' }}>
           <div
             style={{
@@ -110,9 +94,7 @@ export default function SellerDashboardPage() {
             }}
           >
             <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '15px' }}>
-                + Create New Drop
-              </div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: '15px' }}>+ Create New Drop</div>
               <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
                 Schedule your next live auction
               </div>
@@ -121,7 +103,6 @@ export default function SellerDashboardPage() {
           </div>
         </Link>
 
-        {/* Recent drops */}
         <h2 style={{ fontSize: '14px', color: '#b8a898', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>
           Recent Drops
         </h2>
@@ -136,8 +117,8 @@ export default function SellerDashboardPage() {
               <Link key={drop.id} href={`/seller/drops/${drop.id}`} style={{ textDecoration: 'none' }}>
                 <div
                   style={{
-                    background: '#141414',
-                    border: '1px solid #1e1e1e',
+                    background: '#fff',
+                    border: '1px solid #e8e0d8',
                     borderRadius: '12px',
                     padding: '14px 16px',
                     display: 'flex',
@@ -176,27 +157,23 @@ function StatusBadge({ status }: { status: DropEvent['status'] }) {
   }
   const s = map[status] ?? map.draft
   return (
-    <span
-      style={{
-        background: s.bg,
-        color: s.color,
-        fontSize: '11px',
-        fontWeight: 700,
-        borderRadius: '6px',
-        padding: '3px 8px',
-        textTransform: 'capitalize',
-        flexShrink: 0,
-      }}
-    >
+    <span style={{ background: s.bg, color: s.color, fontSize: '11px', fontWeight: 700, borderRadius: '6px', padding: '3px 8px', textTransform: 'capitalize', flexShrink: 0 }}>
       {status}
     </span>
   )
 }
 
-function LoadingScreen() {
+function LoadingScreen({ error }: { error: string | null }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#fdf8f3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#b8a898', fontSize: '14px' }}>Loading…</div>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
+      {error ? (
+        <div style={{ background: '#fff', border: '1px solid #e8e0d8', borderRadius: '12px', padding: '16px 20px', maxWidth: '400px', textAlign: 'center' }}>
+          <p style={{ color: '#ef4444', fontSize: '13px', marginBottom: '8px', fontWeight: 600 }}>Auth error</p>
+          <p style={{ color: '#9a8f87', fontSize: '12px', fontFamily: 'monospace', wordBreak: 'break-all' }}>{error}</p>
+        </div>
+      ) : (
+        <div style={{ color: '#b8a898', fontSize: '14px' }}>Loading…</div>
+      )}
     </div>
   )
 }

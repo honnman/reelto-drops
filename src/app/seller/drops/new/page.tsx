@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSellerAuth } from '@/lib/useSellerAuth'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createDropAction } from '@/app/seller/actions'
 import { slugify } from '@/lib/utils'
 import SellerNav from '@/components/seller/SellerNav'
 
@@ -29,22 +29,16 @@ export default function NewDropPage() {
     setError('')
     setSaving(true)
 
-    const { data: drop, error: err } = await supabaseAdmin
-      .from('drop_events')
-      .insert({
-        drop_seller_id: seller.id,
-        title: title.trim(),
-        description: description.trim() || null,
-        slug,
-        scheduled_at: new Date(scheduledAt).toISOString(),
-        status: 'draft',
-      })
-      .select()
-      .single()
+    const result = await createDropAction(seller.id, {
+      title: title.trim(),
+      description: description.trim() || null,
+      slug,
+      scheduled_at: new Date(scheduledAt).toISOString(),
+    })
 
     setSaving(false)
-    if (err || !drop) { setError(err?.message ?? 'Failed to create'); return }
-    router.push(`/seller/drops/${drop.id}`)
+    if (result.error || !result.drop) { setError(result.error ?? 'Failed to create'); return }
+    router.push(`/seller/drops/${result.drop.id}`)
   }
 
   if (loading) return null
@@ -53,15 +47,7 @@ export default function NewDropPage() {
     <div style={{ minHeight: '100vh', background: '#fdf8f3' }}>
       <SellerNav />
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '28px 20px' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--font-playfair), serif',
-            fontSize: '26px',
-            fontWeight: 700,
-            color: '#1a1a1a',
-            marginBottom: '24px',
-          }}
-        >
+        <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '26px', fontWeight: 700, color: '#1a1a1a', marginBottom: '24px' }}>
           New Drop
         </h1>
 
@@ -96,7 +82,7 @@ export default function NewDropPage() {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                 placeholder="weekend-kanjivaram-drop"
-                style={{ ...inputStyle, paddingLeft: '4px' }}
+                style={{ ...inputStyle, paddingLeft: '4px', border: 'none', background: 'transparent' }}
               />
             </div>
           </Field>
@@ -106,7 +92,7 @@ export default function NewDropPage() {
               type="datetime-local"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              style={{ ...inputStyle, ...fieldBox, colorScheme: 'light' }}
+              style={{ ...inputStyle, colorScheme: 'light' }}
             />
           </Field>
 
@@ -124,7 +110,6 @@ export default function NewDropPage() {
               fontSize: '15px',
               fontWeight: 700,
               cursor: (!title.trim() || !slug || !scheduledAt || saving) ? 'not-allowed' : 'pointer',
-
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

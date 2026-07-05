@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useSellerAuth } from '@/lib/useSellerAuth'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSellerDropsAction } from '@/app/seller/actions'
 import { DropEvent } from '@/lib/types'
 import SellerNav from '@/components/seller/SellerNav'
 
@@ -14,12 +14,7 @@ export default function SellerDropsPage() {
 
   useEffect(() => {
     if (!seller) return
-    supabaseAdmin
-      .from('drop_events')
-      .select('*')
-      .eq('drop_seller_id', seller.id)
-      .order('scheduled_at', { ascending: false })
-      .then(({ data }) => setDrops((data as DropEvent[]) ?? []))
+    getSellerDropsAction(seller.id).then(setDrops)
   }, [seller])
 
   if (loading) return null
