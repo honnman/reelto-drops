@@ -1,25 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabaseAdmin } from '@/lib/supabase'
+import { sendOtpAction, verifyOtpAction } from './actions'
 
 const GRAD = 'linear-gradient(135deg, #EA580C, #DB2877)'
-
-function generateOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
-
-async function hashOtp(otp: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(otp)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-function generateToken(): string {
-  return crypto.randomUUID()
-}
 
 export default function SellerLoginPage() {
   const router = useRouter()
@@ -37,38 +21,15 @@ export default function SellerLoginPage() {
     if (digits.length < 10) { setError('Enter a valid 10-digit number'); return }
 
     setLoading(true)
-    const normalized = digits.length === 10 ? '91' + digits : digits
+    const result = await sendOtpAction(phone)
+    setLoading(false)
 
-    // Check seller exists
-    const { data: sellerData } = await supabaseAdmin
-      .from('drop_seller_profiles')
-      .select('id')
-      .eq('phone', normalized)
-      .maybeSingle()
-
-    if (!sellerData) {
-      setError("No seller account found for this number. Contact Reelto to get listed.")
-      setLoading(false)
+    if (!result.success) {
+      setError(result.error ?? 'Something went wrong.')
       return
     }
 
-    const generatedOtp = generateOtp()
-    const otpHash = await hashOtp(generatedOtp)
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
-
-    // Store OTP session
-    await supabaseAdmin.from('drop_seller_sessions').insert({
-      drop_seller_id: sellerData.id,
-      otp_hash: otpHash,
-      otp_expires_at: expiresAt,
-      is_otp_used: false,
-    })
-
-    // Phase 1: show OTP on screen (Interakt integration later)
-    console.log(`[DEV] OTP for ${normalized}: ${generatedOtp}`)
-    setDevOtp(generatedOtp)
-
-    setLoading(false)
+    if (result.devOtp) setDevOtp(result.devOtp)
     setStep('otp')
   }
 
@@ -76,54 +37,15 @@ export default function SellerLoginPage() {
   async function verifyOtp() {
     setError('')
     setLoading(true)
-    const digits = phone.replace(/\D/g, '')
-    const normalized = digits.length === 10 ? '91' + digits : digits
+    const result = await verifyOtpAction(phone, otp)
+    setLoading(false)
 
-    const { data: seller } = await supabaseAdmin
-      .from('drop_seller_profiles')
-      .select('id')
-      .eq('phone', normalized)
-      .single()
-
-    if (!seller) { setError('Session expired. Please try again.'); setLoading(false); return }
-
-    const otpHash = await hashOtp(otp)
-
-    const { data: session } = await supabaseAdmin
-      .from('drop_seller_sessions')
-      .select('id')
-      .eq('drop_seller_id', seller.id)
-      .eq('otp_hash', otpHash)
-      .eq('is_otp_used', false)
-      .gt('otp_expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (!session) {
-      setError('Invalid or expired OTP. Please try again.')
-      setLoading(false)
+    if (!result.success) {
+      setError(result.error ?? 'Something went wrong.')
       return
     }
 
-    // Mark OTP used
-    await supabaseAdmin
-      .from('drop_seller_sessions')
-      .update({ is_otp_used: true })
-      .eq('id', session.id)
-
-    // Create auth token
-    const token = generateToken()
-    const tokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-
-    await supabaseAdmin.from('drop_seller_sessions').insert({
-      drop_seller_id: seller.id,
-      token,
-      token_expires_at: tokenExpiry,
-      is_otp_used: true,
-    })
-
-    localStorage.setItem('drop_seller_token', token)
+    localStorage.setItem('drop_seller_token', result.token!)
     router.push('/seller/dashboard')
   }
 
@@ -218,7 +140,7 @@ export default function SellerLoginPage() {
             <p style={{ fontSize: '13px', color: '#9a8f87', marginBottom: '16px' }}>
               OTP sent to <strong style={{ color: '#1a1a1a' }}>+91 {phone}</strong>.{' '}
               <button
-                onClick={() => { setStep('phone'); setOtp('') }}
+                onClick={() => { setStep('phone'); setOtp(''); setDevOtp('') }}
                 style={{ background: 'none', border: 'none', color: '#DB2877', cursor: 'pointer', fontSize: '13px', padding: 0 }}
               >
                 Change
