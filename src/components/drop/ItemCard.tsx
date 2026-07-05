@@ -19,10 +19,10 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
 
   /* ─── Card container styles ─── */
   const cardStyle: React.CSSProperties = {
-    background: '#141414',
+    background: '#fff',
     border: isLive
       ? '1px solid #DB2877'
-      : '1px solid #1e1e1e',
+      : '1px solid #e8e0d8',
     borderRadius: '16px',
     overflow: 'hidden',
     opacity: isSold ? 0.45 : 1,
@@ -35,10 +35,10 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
 
   /* ─── Status tag ─── */
   const statusTag = isSold
-    ? { label: 'Sold', bg: '#1a1a1a', color: '#666' }
+    ? { label: 'Sold', bg: '#f5f0ea', color: '#b8a898' }
     : isLive
-    ? { label: '⚡ Now Live', bg: 'rgba(219,40,119,0.15)', color: '#DB2877' }
-    : { label: 'Up Next', bg: '#1a1a1a', color: '#555' }
+    ? { label: '⚡ Now Live', bg: 'rgba(219,40,119,0.1)', color: '#DB2877' }
+    : { label: 'Up Next', bg: '#f5f0ea', color: '#9a8f87' }
 
   /* ─── Photo filter ─── */
   const imgFilter = isUpcoming ? 'blur(8px) brightness(0.3)' : 'none'
@@ -58,7 +58,7 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
           position: 'relative',
           aspectRatio: '4/3',
           overflow: 'hidden',
-          background: '#1a1a1a',
+          background: '#f5f0ea',
         }}
       >
         {photo ? (
@@ -121,7 +121,7 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
             fontWeight: 700,
             borderRadius: '6px',
             padding: '3px 8px',
-            border: isLive ? '1px solid rgba(219,40,119,0.4)' : '1px solid #242424',
+            border: isLive ? '1px solid rgba(219,40,119,0.4)' : '1px solid #e8e0d8',
             backdropFilter: 'blur(4px)',
           }}
         >
@@ -137,7 +137,7 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
             fontFamily: 'var(--font-playfair), serif',
             fontSize: '18px',
             fontWeight: 700,
-            color: isSold ? '#666' : '#f0f0f0',
+            color: isSold ? '#b8a898' : '#1a1a1a',
             margin: '0 0 6px',
             lineHeight: 1.25,
           }}
@@ -150,7 +150,7 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
           <p
             style={{
               fontSize: '12px',
-              color: '#555',
+              color: '#9a8f87',
               margin: '0 0 14px',
               lineHeight: 1.5,
             }}
@@ -174,14 +174,14 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
               style={{
                 fontSize: '20px',
                 fontWeight: 700,
-                color: isSold ? '#555' : isLive ? '#f5f5f5' : '#444',
+                color: isSold ? '#b8a898' : isLive ? '#1a1a1a' : '#4a4a4a',
                 fontFamily: 'var(--font-inter), sans-serif',
               }}
             >
               {priceDisplay}
             </div>
             {isLive && (
-              <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', color: '#9a8f87', marginTop: '2px' }}>
                 incl. shipping
               </div>
             )}
@@ -192,9 +192,9 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
             <button
               disabled
               style={{
-                background: '#1a1a1a',
-                color: '#444',
-                border: '1px solid #242424',
+                background: '#f5f0ea',
+                color: '#b8a898',
+                border: '1px solid #e8e0d8',
                 borderRadius: '10px',
                 padding: '10px 20px',
                 fontSize: '13px',
@@ -231,9 +231,9 @@ export default function ItemCard({ item, product, seller, drop }: ItemCardProps)
             <button
               disabled
               style={{
-                background: '#1a1a1a',
-                color: '#333',
-                border: '1px solid #242424',
+                background: '#f5f0ea',
+                color: '#9a8f87',
+                border: '1px solid #e8e0d8',
                 borderRadius: '10px',
                 padding: '10px 20px',
                 fontSize: '13px',

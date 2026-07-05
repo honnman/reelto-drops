@@ -50,7 +50,7 @@ export default function NewDropPage() {
   if (loading) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f' }}>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3' }}>
       <SellerNav />
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '28px 20px' }}>
         <h1
@@ -58,7 +58,7 @@ export default function NewDropPage() {
             fontFamily: 'var(--font-playfair), serif',
             fontSize: '26px',
             fontWeight: 700,
-            color: '#f0f0f0',
+            color: '#1a1a1a',
             marginBottom: '24px',
           }}
         >
@@ -88,7 +88,7 @@ export default function NewDropPage() {
 
           <Field label="Slug (URL) *">
             <div style={{ display: 'flex', alignItems: 'center', ...fieldBox }}>
-              <span style={{ color: '#444', padding: '12px 0 12px 14px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+              <span style={{ color: '#b8a898', padding: '12px 0 12px 14px', fontSize: '13px', whiteSpace: 'nowrap' }}>
                 drop.reelto.in/
               </span>
               <input
@@ -106,7 +106,7 @@ export default function NewDropPage() {
               type="datetime-local"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              style={{ ...inputStyle, ...fieldBox, colorScheme: 'dark' }}
+              style={{ ...inputStyle, ...fieldBox, colorScheme: 'light' }}
             />
           </Field>
 
@@ -116,14 +116,15 @@ export default function NewDropPage() {
             onClick={create}
             disabled={!title.trim() || !slug || !scheduledAt || saving}
             style={{
-              background: (!title.trim() || !slug || !scheduledAt || saving) ? '#222' : GRAD,
-              color: (!title.trim() || !slug || !scheduledAt || saving) ? '#444' : '#fff',
+              background: (!title.trim() || !slug || !scheduledAt || saving) ? '#e8e0d8' : GRAD,
+              color: (!title.trim() || !slug || !scheduledAt || saving) ? '#b8a898' : '#fff',
               border: 'none',
               borderRadius: '12px',
               padding: '15px',
               fontSize: '15px',
               fontWeight: 700,
               cursor: (!title.trim() || !slug || !scheduledAt || saving) ? 'not-allowed' : 'pointer',
+
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -142,7 +143,7 @@ export default function NewDropPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <label style={{ display: 'block', fontSize: '12px', color: '#9a8f87', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         {label}
       </label>
       {children}
@@ -160,19 +161,19 @@ function Spinner() {
 }
 
 const fieldBox: React.CSSProperties = {
-  background: '#141414',
-  border: '1px solid #242424',
+  background: '#fff',
+  border: '1px solid #e8e0d8',
   borderRadius: '10px',
   overflow: 'hidden',
 }
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#141414',
-  border: '1px solid #242424',
+  background: '#fff',
+  border: '1px solid #e8e0d8',
   borderRadius: '10px',
   padding: '12px 14px',
-  color: '#e5e5e5',
+  color: '#1a1a1a',
   fontSize: '15px',
   outline: 'none',
 }

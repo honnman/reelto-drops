@@ -28,6 +28,7 @@ export default function SellerLoginPage() {
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [devOtp, setDevOtp] = useState('')
 
   /* ─── Step 1: Send OTP ─── */
   async function sendOtp() {
@@ -63,8 +64,9 @@ export default function SellerLoginPage() {
       is_otp_used: false,
     })
 
-    // Phase 1: log OTP (Interakt integration later)
+    // Phase 1: show OTP on screen (Interakt integration later)
     console.log(`[DEV] OTP for ${normalized}: ${generatedOtp}`)
+    setDevOtp(generatedOtp)
 
     setLoading(false)
     setStep('otp')
@@ -129,7 +131,7 @@ export default function SellerLoginPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#0f0f0f',
+        background: '#fdf8f3',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -140,8 +142,8 @@ export default function SellerLoginPage() {
         style={{
           width: '100%',
           maxWidth: '400px',
-          background: '#191919',
-          border: '1px solid #242424',
+          background: '#fff',
+          border: '1px solid #e8e0d8',
           borderRadius: '20px',
           padding: '32px 28px',
         }}
@@ -161,7 +163,7 @@ export default function SellerLoginPage() {
           >
             Reelto Drop
           </span>
-          <p style={{ color: '#555', fontSize: '13px', marginTop: '6px' }}>
+          <p style={{ color: '#9a8f87', fontSize: '13px', marginTop: '6px' }}>
             Seller Portal
           </p>
         </div>
@@ -173,7 +175,7 @@ export default function SellerLoginPage() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1px solid #2e2e2e',
+                border: '1px solid #e8e0d8',
                 borderRadius: '10px',
                 overflow: 'hidden',
                 marginBottom: '16px',
@@ -182,10 +184,10 @@ export default function SellerLoginPage() {
               <span
                 style={{
                   padding: '12px 14px',
-                  background: '#141414',
-                  color: '#555',
+                  background: '#faf5f0',
+                  color: '#9a8f87',
                   fontSize: '14px',
-                  borderRight: '1px solid #2e2e2e',
+                  borderRight: '1px solid #e8e0d8',
                   flexShrink: 0,
                 }}
               >
@@ -208,8 +210,13 @@ export default function SellerLoginPage() {
           </>
         ) : (
           <>
-            <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px' }}>
-              OTP sent to <strong style={{ color: '#ccc' }}>+91 {phone}</strong>.{' '}
+            {devOtp && (
+              <div style={{ background: '#faf5f0', border: '1px solid #e8e0d8', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', fontSize: '13px', color: '#9a8f87' }}>
+                Dev OTP: <strong style={{ color: '#DB2877', letterSpacing: '4px', fontFamily: 'monospace' }}>{devOtp}</strong>
+              </div>
+            )}
+            <p style={{ fontSize: '13px', color: '#9a8f87', marginBottom: '16px' }}>
+              OTP sent to <strong style={{ color: '#1a1a1a' }}>+91 {phone}</strong>.{' '}
               <button
                 onClick={() => { setStep('phone'); setOtp('') }}
                 style={{ background: 'none', border: 'none', color: '#DB2877', cursor: 'pointer', fontSize: '13px', padding: 0 }}
@@ -230,7 +237,7 @@ export default function SellerLoginPage() {
                 textAlign: 'center',
                 fontSize: '24px',
                 letterSpacing: '8px',
-                border: '1px solid #2e2e2e',
+                border: '1px solid #e8e0d8',
                 borderRadius: '10px',
                 marginBottom: '16px',
                 width: '100%',
@@ -252,7 +259,7 @@ export default function SellerLoginPage() {
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '12px',
-  color: '#666',
+  color: '#9a8f87',
   marginBottom: '8px',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
@@ -263,7 +270,7 @@ const inputStyle: React.CSSProperties = {
   background: 'transparent',
   border: 'none',
   outline: 'none',
-  color: '#e5e5e5',
+  color: '#1a1a1a',
   fontSize: '16px',
   padding: '12px 14px',
   width: '100%',
@@ -292,8 +299,8 @@ function GradButton({
       disabled={disabled || loading}
       style={{
         width: '100%',
-        background: disabled || loading ? '#2a2a2a' : GRAD,
-        color: disabled || loading ? '#444' : '#fff',
+        background: disabled || loading ? '#e8e0d8' : GRAD,
+        color: disabled || loading ? '#b8a898' : '#fff',
         border: 'none',
         borderRadius: '10px',
         padding: '14px',

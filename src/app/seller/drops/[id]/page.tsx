@@ -149,15 +149,15 @@ export default function ManageDropPage() {
   if (!drop) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f' }}>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3' }}>
       <SellerNav />
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '28px 20px' }}>
 
         {/* Section A: Drop details */}
         <div
           style={{
-            background: '#141414',
-            border: '1px solid #1e1e1e',
+            background: '#fff',
+            border: '1px solid #e8e0d8',
             borderRadius: '16px',
             padding: '20px',
             marginBottom: '24px',
@@ -165,10 +165,10 @@ export default function ManageDropPage() {
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
             <div>
-              <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '22px', color: '#f0f0f0', margin: '0 0 4px' }}>
+              <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '22px', color: '#1a1a1a', margin: '0 0 4px' }}>
                 {drop.title}
               </h1>
-              <p style={{ color: '#555', fontSize: '13px', margin: 0 }}>
+              <p style={{ color: '#9a8f87', fontSize: '13px', margin: 0 }}>
                 {new Date(drop.scheduled_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
               </p>
             </div>
@@ -192,8 +192,8 @@ export default function ManageDropPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  border: '1px solid #2e2e2e',
-                  color: '#888',
+                  border: '1px solid #e8e0d8',
+                  color: '#b8a898',
                   borderRadius: '8px',
                   padding: '8px 16px',
                   fontSize: '13px',
@@ -211,7 +211,7 @@ export default function ManageDropPage() {
 
         {/* Section B: Items */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <h2 style={{ color: '#888', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+          <h2 style={{ color: '#b8a898', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
             Items ({items.length})
           </h2>
           {drop.status !== 'ended' && (
@@ -240,7 +240,7 @@ export default function ManageDropPage() {
         )}
 
         {items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#444', fontSize: '13px' }}>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#b8a898', fontSize: '13px' }}>
             No items yet. Add your first product!
           </div>
         ) : (
@@ -266,7 +266,7 @@ export default function ManageDropPage() {
             <div>
               <label style={labelStyle}>Select product</label>
               {products.length === 0 ? (
-                <p style={{ color: '#555', fontSize: '13px' }}>
+                <p style={{ color: '#9a8f87', fontSize: '13px' }}>
                   No products yet.{' '}
                   <a href="/seller/products/new" style={{ color: '#DB2877' }}>Add a product first</a>
                 </p>
@@ -297,8 +297,8 @@ export default function ManageDropPage() {
               onClick={addItem}
               disabled={!selectedProductId || !startingBid || adding}
               style={{
-                background: !selectedProductId || !startingBid || adding ? '#222' : GRAD,
-                color: !selectedProductId || !startingBid || adding ? '#444' : '#fff',
+                background: !selectedProductId || !startingBid || adding ? '#e8e0d8' : GRAD,
+                color: !selectedProductId || !startingBid || adding ? '#b8a898' : '#fff',
                 border: 'none',
                 borderRadius: '10px',
                 padding: '13px',
@@ -335,18 +335,18 @@ function ItemRow({
   const isLive = dropStatus === 'live'
 
   const statusColors: Record<string, { bg: string; color: string }> = {
-    upcoming: { bg: '#1a1a1a', color: '#555' },
-    live: { bg: 'rgba(219,40,119,0.15)', color: '#DB2877' },
-    sold: { bg: 'rgba(34,197,94,0.1)', color: '#22c55e' },
-    unsold: { bg: '#1a1a1a', color: '#444' },
+    upcoming: { bg: '#f5f0ea', color: '#9a8f87' },
+    live: { bg: 'rgba(219,40,119,0.1)', color: '#DB2877' },
+    sold: { bg: 'rgba(34,197,94,0.08)', color: '#22c55e' },
+    unsold: { bg: '#f5f0ea', color: '#b8a898' },
   }
   const sc = statusColors[item.status] ?? statusColors.upcoming
 
   return (
     <div
       style={{
-        background: '#141414',
-        border: item.status === 'live' ? '1px solid #DB2877' : '1px solid #1e1e1e',
+        background: '#fff',
+        border: item.status === 'live' ? '1px solid #DB2877' : '1px solid #e8e0d8',
         borderRadius: '12px',
         padding: '12px 14px',
         display: 'flex',
@@ -361,7 +361,7 @@ function ItemRow({
           height: '48px',
           borderRadius: '8px',
           overflow: 'hidden',
-          background: '#1a1a1a',
+          background: '#f5f0ea',
           flexShrink: 0,
         }}
       >
@@ -375,10 +375,10 @@ function ItemRow({
 
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: 600, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ color: '#1a1a1a', fontSize: '14px', fontWeight: 600, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {String(item.sort_order).padStart(2, '0')} · {item.product?.name ?? '—'}
         </p>
-        <p style={{ color: '#555', fontSize: '12px', margin: 0 }}>{formatINR(item.starting_bid)}</p>
+        <p style={{ color: '#9a8f87', fontSize: '12px', margin: 0 }}>{formatINR(item.starting_bid)}</p>
       </div>
 
       {/* Status */}
@@ -404,9 +404,9 @@ function StatusBadge({ status }: { status: DropEvent['status'] }) {
   const map: Record<string, { bg: string; color: string }> = {
     live: { bg: 'rgba(219,40,119,0.15)', color: '#DB2877' },
     scheduled: { bg: 'rgba(234,88,12,0.15)', color: '#EA580C' },
-    ended: { bg: '#1a1a1a', color: '#555' },
-    draft: { bg: '#1a1a1a', color: '#444' },
-    cancelled: { bg: '#1a1a1a', color: '#444' },
+    ended: { bg: '#f5f0ea', color: '#9a8f87' },
+    draft: { bg: '#f5f0ea', color: '#b8a898' },
+    cancelled: { bg: '#f5f0ea', color: '#b8a898' },
   }
   const s = map[status] ?? map.draft
   return (
@@ -421,9 +421,9 @@ function ActionBtn({ label, onClick, grad, danger }: { label: string; onClick: (
     <button
       onClick={onClick}
       style={{
-        background: danger ? 'rgba(239,68,68,0.15)' : grad ? GRAD : '#222',
-        color: danger ? '#ef4444' : '#fff',
-        border: danger ? '1px solid rgba(239,68,68,0.3)' : 'none',
+        background: danger ? 'rgba(239,68,68,0.1)' : grad ? GRAD : '#f5f0ea',
+        color: danger ? '#ef4444' : grad ? '#fff' : '#1a1a1a',
+        border: danger ? '1px solid rgba(239,68,68,0.3)' : grad ? 'none' : '1px solid #e8e0d8',
         borderRadius: '8px',
         padding: '9px 18px',
         fontSize: '13px',
@@ -453,10 +453,10 @@ function smallBtn(color: string): React.CSSProperties {
 function Modal({ onClose, title, children }: { onClose: () => void; title: string; children: React.ReactNode }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}>
-      <div style={{ background: '#191919', border: '1px solid #242424', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '400px' }}>
+      <div style={{ background: '#fff', border: '1px solid #e8e0d8', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '400px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ color: '#f0f0f0', fontSize: '18px', fontWeight: 700, margin: 0 }}>{title}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          <h2 style={{ color: '#1a1a1a', fontSize: '18px', fontWeight: 700, margin: 0 }}>{title}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9a8f87', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
         {children}
       </div>
@@ -466,8 +466,8 @@ function Modal({ onClose, title, children }: { onClose: () => void; title: strin
 
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#444', fontSize: '14px' }}>Loading…</div>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: '#b8a898', fontSize: '14px' }}>Loading…</div>
     </div>
   )
 }
@@ -475,18 +475,18 @@ function LoadingScreen() {
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '12px',
-  color: '#666',
+  color: '#9a8f87',
   marginBottom: '8px',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
 }
 
 const inputStyle: React.CSSProperties = {
-  background: '#141414',
-  border: '1px solid #2e2e2e',
+  background: '#faf5f0',
+  border: '1px solid #e8e0d8',
   borderRadius: '10px',
   padding: '11px 14px',
-  color: '#e5e5e5',
+  color: '#1a1a1a',
   fontSize: '14px',
   outline: 'none',
   width: '100%',

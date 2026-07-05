@@ -35,7 +35,7 @@ export default function SellerDashboardPage() {
   const totalGmv = drops.reduce((sum, d) => sum + (d.total_gmv ?? 0), 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f' }}>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3' }}>
       <SellerNav />
 
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '28px 20px' }}>
@@ -45,13 +45,13 @@ export default function SellerDashboardPage() {
             fontFamily: 'var(--font-playfair), serif',
             fontSize: '26px',
             fontWeight: 700,
-            color: '#f0f0f0',
+            color: '#1a1a1a',
             marginBottom: '4px',
           }}
         >
           Welcome back, {seller?.display_name}
         </h1>
-        <p style={{ color: '#555', fontSize: '13px', marginBottom: '28px' }}>
+        <p style={{ color: '#9a8f87', fontSize: '13px', marginBottom: '28px' }}>
           Here&apos;s your drop summary
         </p>
 
@@ -65,15 +65,15 @@ export default function SellerDashboardPage() {
           }}
         >
           {[
-            { label: 'Total Drops', value: totalDrops, color: '#f0f0f0' },
-            { label: 'Items Sold', value: totalSold, color: '#f0f0f0' },
+            { label: 'Total Drops', value: totalDrops, color: '#1a1a1a' },
+            { label: 'Items Sold', value: totalSold, color: '#1a1a1a' },
             { label: 'Total GMV', value: formatINR(totalGmv), color: '#DB2877' },
           ].map((stat) => (
             <div
               key={stat.label}
               style={{
-                background: '#141414',
-                border: '1px solid #1e1e1e',
+                background: '#fff',
+                border: '1px solid #e8e0d8',
                 borderRadius: '14px',
                 padding: '16px',
               }}
@@ -88,7 +88,7 @@ export default function SellerDashboardPage() {
               >
                 {stat.value}
               </div>
-              <div style={{ fontSize: '11px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ fontSize: '11px', color: '#b8a898', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {stat.label}
               </div>
             </div>
@@ -122,14 +122,14 @@ export default function SellerDashboardPage() {
         </Link>
 
         {/* Recent drops */}
-        <h2 style={{ fontSize: '14px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>
+        <h2 style={{ fontSize: '14px', color: '#b8a898', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>
           Recent Drops
         </h2>
 
         {dropsLoading ? (
-          <p style={{ color: '#444', fontSize: '13px' }}>Loading…</p>
+          <p style={{ color: '#b8a898', fontSize: '13px' }}>Loading…</p>
         ) : drops.length === 0 ? (
-          <p style={{ color: '#444', fontSize: '13px' }}>No drops yet. Create your first one!</p>
+          <p style={{ color: '#b8a898', fontSize: '13px' }}>No drops yet. Create your first one!</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {drops.map((drop) => (
@@ -147,10 +147,10 @@ export default function SellerDashboardPage() {
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: '#e0e0e0', fontWeight: 600, fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ color: '#1a1a1a', fontWeight: 600, fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {drop.title}
                     </p>
-                    <p style={{ color: '#555', fontSize: '12px' }}>
+                    <p style={{ color: '#9a8f87', fontSize: '12px' }}>
                       {new Date(drop.scheduled_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       {' · '}{drop.total_items ?? 0} items
                     </p>
@@ -170,9 +170,9 @@ function StatusBadge({ status }: { status: DropEvent['status'] }) {
   const map: Record<string, { bg: string; color: string }> = {
     live: { bg: 'rgba(219,40,119,0.15)', color: '#DB2877' },
     scheduled: { bg: 'rgba(234,88,12,0.15)', color: '#EA580C' },
-    ended: { bg: '#1a1a1a', color: '#555' },
-    draft: { bg: '#1a1a1a', color: '#444' },
-    cancelled: { bg: '#1a1a1a', color: '#444' },
+    ended: { bg: '#f5f0ea', color: '#9a8f87' },
+    draft: { bg: '#f5f0ea', color: '#b8a898' },
+    cancelled: { bg: '#f5f0ea', color: '#b8a898' },
   }
   const s = map[status] ?? map.draft
   return (
@@ -195,8 +195,8 @@ function StatusBadge({ status }: { status: DropEvent['status'] }) {
 
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#444', fontSize: '14px' }}>Loading…</div>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: '#b8a898', fontSize: '14px' }}>Loading…</div>
     </div>
   )
 }

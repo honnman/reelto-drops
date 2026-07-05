@@ -76,7 +76,7 @@ export default async function DropPage({ params }: Props) {
     <div
       style={{
         minHeight: '100vh',
-        background: '#0f0f0f',
+        background: '#fdf8f3',
         maxWidth: '480px',
         margin: '0 auto',
       }}
@@ -92,7 +92,7 @@ export default async function DropPage({ params }: Props) {
             style={{
               textAlign: 'center',
               padding: '40px 0',
-              color: '#444',
+              color: '#b8a898',
               fontSize: '14px',
             }}
           >
@@ -120,14 +120,14 @@ export default async function DropPage({ params }: Props) {
         style={{
           padding: '24px 20px 40px',
           textAlign: 'center',
-          borderTop: '1px solid #1a1a1a',
+          borderTop: '1px solid #e8e0d8',
           marginTop: '8px',
         }}
       >
         <p
           style={{
             fontSize: '13px',
-            color: '#555',
+            color: '#9a8f87',
             marginBottom: '14px',
             lineHeight: 1.5,
           }}

@@ -12,27 +12,17 @@ export default function DropHero({ drop }: DropHeroProps) {
 
   return (
     <div style={{ padding: '28px 20px 20px' }}>
-      {/* Date subtitle */}
-      <p
-        style={{
-          fontSize: '13px',
-          color: '#888',
-          letterSpacing: '0.5px',
-          marginBottom: '10px',
-          textTransform: 'uppercase',
-        }}
-      >
+      <p style={{ fontSize: '13px', color: '#b8a898', letterSpacing: '0.5px', marginBottom: '10px', textTransform: 'uppercase' }}>
         {formatDropDate(drop.scheduled_at)}
       </p>
 
-      {/* Title */}
       <h1
         style={{
           fontFamily: 'var(--font-playfair), serif',
           fontSize: '32px',
           fontWeight: 700,
           lineHeight: 1.2,
-          color: '#f5f5f5',
+          color: '#1a1a1a',
           margin: '0 0 16px',
           letterSpacing: '-0.5px',
         }}
@@ -40,7 +30,6 @@ export default function DropHero({ drop }: DropHeroProps) {
         {drop.title}
       </h1>
 
-      {/* Gradient divider */}
       <div
         style={{
           width: '40px',
@@ -51,21 +40,19 @@ export default function DropHero({ drop }: DropHeroProps) {
         }}
       />
 
-      {/* Stats row */}
       <div
         style={{
           display: 'flex',
-          gap: '0',
-          background: '#141414',
-          border: '1px solid #1e1e1e',
+          background: '#fff',
+          border: '1px solid #e8e0d8',
           borderRadius: '12px',
           overflow: 'hidden',
         }}
       >
         {[
-          { label: 'Total Items', value: totalItems },
-          { label: 'Sold', value: soldCount },
-          { label: 'Available', value: available },
+          { label: 'Total Items', value: totalItems, color: '#1a1a1a' },
+          { label: 'Sold', value: soldCount, color: '#9a8f87' },
+          { label: 'Available', value: available, color: '#DB2877' },
         ].map((stat, i) => (
           <div
             key={stat.label}
@@ -73,20 +60,13 @@ export default function DropHero({ drop }: DropHeroProps) {
               flex: 1,
               padding: '12px 8px',
               textAlign: 'center',
-              borderRight: i < 2 ? '1px solid #1e1e1e' : 'none',
+              borderRight: i < 2 ? '1px solid #e8e0d8' : 'none',
             }}
           >
-            <div
-              style={{
-                fontSize: '22px',
-                fontWeight: 700,
-                color: i === 1 ? '#888' : i === 2 ? '#DB2877' : '#f5f5f5',
-                fontFamily: 'var(--font-inter), sans-serif',
-              }}
-            >
+            <div style={{ fontSize: '22px', fontWeight: 700, color: stat.color }}>
               {stat.value}
             </div>
-            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: '11px', color: '#b8a898', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {stat.label}
             </div>
           </div>
@@ -94,15 +74,7 @@ export default function DropHero({ drop }: DropHeroProps) {
       </div>
 
       {drop.description && (
-        <p
-          style={{
-            fontSize: '14px',
-            color: '#666',
-            lineHeight: 1.6,
-            marginTop: '16px',
-            marginBottom: 0,
-          }}
-        >
+        <p style={{ fontSize: '14px', color: '#9a8f87', lineHeight: 1.6, marginTop: '16px', marginBottom: 0 }}>
           {drop.description}
         </p>
       )}

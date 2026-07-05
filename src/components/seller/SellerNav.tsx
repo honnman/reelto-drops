@@ -19,7 +19,7 @@ export default function SellerNav() {
       <Link
         href={href}
         style={{
-          color: active ? '#DB2877' : '#999',
+          color: active ? '#DB2877' : '#9a8f87',
           textDecoration: 'none',
           fontSize: '14px',
           fontWeight: active ? 600 : 400,
@@ -35,8 +35,8 @@ export default function SellerNav() {
     <nav
       style={{
         height: '56px',
-        background: '#262626',
-        borderBottom: '1px solid #333',
+        background: '#fff',
+        borderBottom: '1px solid #e8e0d8',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -74,8 +74,8 @@ export default function SellerNav() {
         onClick={logout}
         style={{
           background: 'transparent',
-          border: '1px solid #444',
-          color: '#888',
+          border: '1px solid #e8e0d8',
+          color: '#9a8f87',
           fontSize: '13px',
           borderRadius: '8px',
           padding: '6px 14px',

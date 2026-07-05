@@ -15,16 +15,15 @@ export default function DropHeader({ drop, seller }: DropHeaderProps) {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '14px 20px',
-        borderBottom: '1px solid #1e1e1e',
+        borderBottom: '1px solid #e8e0d8',
         position: 'sticky',
         top: 0,
-        background: 'rgba(15,15,15,0.95)',
+        background: 'rgba(253,248,243,0.95)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         zIndex: 10,
       }}
     >
-      {/* Left: Reelto wordmark */}
       <span
         style={{
           fontFamily: 'var(--font-playfair), serif',
@@ -40,7 +39,6 @@ export default function DropHeader({ drop, seller }: DropHeaderProps) {
         Reelto
       </span>
 
-      {/* Center: Drop badge */}
       <span
         style={{
           fontSize: '11px',
@@ -56,9 +54,8 @@ export default function DropHeader({ drop, seller }: DropHeaderProps) {
         Drop
       </span>
 
-      {/* Right: seller + live indicator */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ fontSize: '13px', color: '#aaa', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '13px', color: '#9a8f87', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {seller.display_name}
         </span>
         {isLive && (
@@ -69,7 +66,6 @@ export default function DropHeader({ drop, seller }: DropHeaderProps) {
               borderRadius: '50%',
               background: '#22c55e',
               display: 'inline-block',
-              animation: 'pulse 1.5s ease-in-out infinite',
               flexShrink: 0,
             }}
           />
@@ -78,8 +74,8 @@ export default function DropHeader({ drop, seller }: DropHeaderProps) {
 
       <style>{`
         @keyframes pulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-          50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
       `}</style>
     </div>

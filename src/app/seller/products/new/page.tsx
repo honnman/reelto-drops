@@ -78,10 +78,10 @@ export default function NewProductPage() {
   if (authLoading) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f' }}>
+    <div style={{ minHeight: '100vh', background: '#fdf8f3' }}>
       <SellerNav />
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '28px 20px' }}>
-        <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '26px', fontWeight: 700, color: '#f0f0f0', marginBottom: '24px' }}>
+        <h1 style={{ fontFamily: 'var(--font-playfair), serif', fontSize: '26px', fontWeight: 700, color: '#1a1a1a', marginBottom: '24px' }}>
           Add Product
         </h1>
 
@@ -98,7 +98,7 @@ export default function NewProductPage() {
                     aspectRatio: '1',
                     borderRadius: '8px',
                     overflow: 'hidden',
-                    background: '#1a1a1a',
+                    background: '#f5f0ea',
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -132,9 +132,9 @@ export default function NewProductPage() {
                   style={{
                     aspectRatio: '1',
                     borderRadius: '8px',
-                    border: '1px dashed #2e2e2e',
+                    border: '1px dashed #e8e0d8',
                     background: 'transparent',
-                    color: '#444',
+                    color: '#b8a898',
                     cursor: 'pointer',
                     fontSize: '22px',
                     display: 'flex',
@@ -213,8 +213,8 @@ export default function NewProductPage() {
             onClick={save}
             disabled={!name.trim() || saving}
             style={{
-              background: !name.trim() || saving ? '#222' : GRAD,
-              color: !name.trim() || saving ? '#444' : '#fff',
+              background: !name.trim() || saving ? '#e8e0d8' : GRAD,
+              color: !name.trim() || saving ? '#b8a898' : '#fff',
               border: 'none',
               borderRadius: '12px',
               padding: '15px',
@@ -243,7 +243,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '12px',
-  color: '#666',
+  color: '#9a8f87',
   marginBottom: '8px',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
@@ -251,11 +251,11 @@ const labelStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#141414',
-  border: '1px solid #242424',
+  background: '#faf5f0',
+  border: '1px solid #e8e0d8',
   borderRadius: '10px',
   padding: '12px 14px',
-  color: '#e5e5e5',
+  color: '#1a1a1a',
   fontSize: '15px',
   outline: 'none',
 }
