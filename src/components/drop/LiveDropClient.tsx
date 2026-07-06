@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { DropEvent, DropEventItem, DropProduct, DropSellerProfile, TrustedBuyer } from '@/lib/types'
 import { formatINR, buildWhatsAppUrl } from '@/lib/utils'
@@ -54,6 +54,10 @@ export default function LiveDropClient({ drop, seller, items: initialItems, buye
   const [bidFeed, setBidFeed] = useState<BidEntry[]>([])
   const [activeItemId, setActiveItemId] = useState<string | null>(null)
 
+  // Countdown timer
+  const [timerEndsAt, setTimerEndsAt] = useState<string | null>(null)
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+
   // Bid form state
   const [phone, setPhone] = useState('')
   const [bidAmount, setBidAmount] = useState('')
@@ -64,10 +68,30 @@ export default function LiveDropClient({ drop, seller, items: initialItems, buye
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   useEffect(() => {
-    // Find the currently live item
     const liveItem = initialItems.find((i) => liveState[i.id]?.status === 'live')
     setActiveItemId(liveItem?.id ?? null)
+    // Update timer from live item state
+    if (liveItem) {
+      const itemState = liveState[liveItem.id]
+      const endsAt = (itemState as any).timer_ends_at ?? liveItem.timer_ends_at ?? null
+      setTimerEndsAt(endsAt)
+    } else {
+      setTimerEndsAt(null)
+      setSecondsLeft(null)
+    }
   }, [liveState, initialItems])
+
+  // Countdown tick
+  useEffect(() => {
+    if (!timerEndsAt) { setSecondsLeft(null); return }
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((new Date(timerEndsAt).getTime() - Date.now()) / 1000))
+      setSecondsLeft(diff)
+    }
+    tick()
+    const id = setInterval(tick, 500)
+    return () => clearInterval(id)
+  }, [timerEndsAt])
 
   useEffect(() => {
     if (!activeItemId) return
@@ -102,8 +126,17 @@ export default function LiveDropClient({ drop, seller, items: initialItems, buye
               bid_count: updated.bid_count,
               status: updated.status,
               winning_bid_amount: updated.winning_bid_amount,
-            },
+              timer_ends_at: updated.timer_ends_at,
+            } as ItemLiveState & { timer_ends_at: string | null },
           }))
+          // Sync timer if this item is live
+          if (updated.status === 'live' && updated.timer_ends_at) {
+            setTimerEndsAt(updated.timer_ends_at)
+          }
+          if (updated.status !== 'live') {
+            setTimerEndsAt(null)
+            setSecondsLeft(null)
+          }
         }
       )
       .subscribe()
@@ -148,6 +181,7 @@ export default function LiveDropClient({ drop, seller, items: initialItems, buye
   const liveItem = initialItems.find((i) => liveState[i.id]?.status === 'live')
   const currentBid = liveItem ? (liveState[liveItem.id]?.current_bid ?? liveItem.starting_bid) : null
   const minNextBid = currentBid ? currentBid + 1 : null
+  const isClosed = secondsLeft === 0
 
   return (
     <div style={{ minHeight: '100vh', background: '#fdf8f3', maxWidth: '480px', margin: '0 auto' }}>
@@ -177,7 +211,7 @@ export default function LiveDropClient({ drop, seller, items: initialItems, buye
                 key={item.id}
                 item={{ ...item, ...live }}
                 product={item.product}
-                isActiveForBid={isLive && item.id === activeItemId}
+                isActiveForBid={isLive && item.id === activeItemId && !isClosed}
                 bidFeed={isLive ? bidFeed : []}
                 phone={phone}
                 setPhone={setPhone}
@@ -188,6 +222,7 @@ export default function LiveDropClient({ drop, seller, items: initialItems, buye
                 bidSuccess={bidSuccess}
                 minNextBid={isLive ? minNextBid : null}
                 onSubmitBid={submitBid}
+                secondsLeft={isLive ? secondsLeft : null}
               />
             )
           })
@@ -228,6 +263,7 @@ function ItemCardLive({
   bidSuccess,
   minNextBid,
   onSubmitBid,
+  secondsLeft,
 }: {
   item: DropEventItem & { product?: DropProduct }
   product: DropProduct
@@ -242,6 +278,7 @@ function ItemCardLive({
   bidSuccess: string
   minNextBid: number | null
   onSubmitBid: () => void
+  secondsLeft: number | null
 }) {
   const isSold = item.status === 'sold'
   const isLive = item.status === 'live'
@@ -343,6 +380,31 @@ function ItemCardLive({
                 )}
               </div>
             </div>
+
+            {/* Countdown timer */}
+            {secondsLeft !== null && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: secondsLeft <= 30 ? 'rgba(239,68,68,0.08)' : '#faf5f0',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                marginBottom: '10px',
+              }}>
+                <span style={{ fontSize: '12px', color: '#9a8f87' }}>
+                  {secondsLeft === 0 ? 'Bidding closed' : secondsLeft <= 30 ? '⚡ Last chance!' : 'Time remaining'}
+                </span>
+                <span style={{
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  fontFamily: 'monospace',
+                  color: secondsLeft === 0 ? '#b8a898' : secondsLeft <= 30 ? '#ef4444' : '#1a1a1a',
+                }}>
+                  {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+                </span>
+              </div>
+            )}
 
             {/* Bid feed */}
             {bidFeed.length > 0 && (

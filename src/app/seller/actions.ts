@@ -100,6 +100,35 @@ export async function updateItemStatusAction(
   await supabaseAdmin.from('drop_event_items').update(patch).eq('id', itemId)
 }
 
+export async function revealItemWithTimerAction(
+  itemId: string,
+  timerSeconds: number
+): Promise<{ endsAt?: string; error?: string }> {
+  const { data, error } = await supabaseAdmin.rpc('reveal_item_with_timer', {
+    p_item_id: itemId,
+    p_timer_seconds: timerSeconds,
+  })
+  if (error) return { error: error.message }
+  return { endsAt: (data as { ends_at: string }).ends_at }
+}
+
+export async function closeItemAction(itemId: string): Promise<{ winnerPhone?: string | null; amount?: number; error?: string }> {
+  const { data, error } = await supabaseAdmin.rpc('close_item', { p_item_id: itemId })
+  if (error) return { error: error.message }
+  const result = data as { success: boolean; winner_phone: string | null; amount: number }
+  return { winnerPhone: result.winner_phone, amount: result.amount }
+}
+
+export async function getReeltoProductsAction(influencerId: string): Promise<{
+  id: string; name: string; description: string | null; fabric: string | null;
+  category: string | null; price: number; photos: string[]
+}[]> {
+  const { data } = await supabaseAdmin.rpc('get_reelto_products_for_seller', {
+    p_influencer_id: influencerId,
+  })
+  return (data as any[]) ?? []
+}
+
 /* ─── Products ─── */
 
 export async function getSellerProductsAction(sellerId: string): Promise<DropProduct[]> {
